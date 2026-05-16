@@ -75,8 +75,8 @@ async function enviarComandoIA() {
         // Converte o texto da IA em uma lista Javascript real
         const matrizBlocos = JSON.parse(jsonTexto);
 
-        // Processa os dados gerados
-        limparCena(); // Apaga a estrutura anterior do 3D antes de desenhar a nova
+        // Processa os dados gerados no motor 3D e interface
+        limparCena(); 
         renderizarEstrutura(matrizBlocos);
         atualizarPainelMateriais(matrizBlocos);
 
@@ -91,19 +91,12 @@ async function enviarComandoIA() {
     }
 }
 
-// 3. RENDERIZAÇÃO DOS BLOCOS NO MOTOR 3D
+// 3. RENDERIZAÇÃO DOS BLOCOS ADAPTADA PARA TEXTURAS ORIGINAIS
 function renderizarEstrutura(listaDeBlocos) {
     listaDeBlocos.forEach(bloco => {
-        // Mapeamento de cores provisórias para a V1 com base no ID retornado pela IA
-        let cor = 0x8cff00; // Padrão verde limão
-        if (bloco.id === "cobblestone") cor = 0x737373;
-        if (bloco.id === "stone_bricks") cor = 0x8a8a8a;
-        if (bloco.id === "oak_planks") cor = 0xa67a4e;
-        if (bloco.id === "glass") cor = 0xd9f2ff;
-        if (bloco.id === "iron_bars") cor = 0xcccccc;
-
-        // Chama a função global criada lá no engine.js
-        adicionarBloco(bloco.x, bloco.y, bloco.z, cor);
+        // Envia o ID técnico recebido da IA diretamente para o engine.js
+        // Lá ele escolherá a textura original correta e o formato tridimensional correto
+        adicionarBloco(bloco.x, bloco.y, bloco.z, bloco.id);
     });
 }
 
@@ -161,8 +154,8 @@ function mudarVisao(tipoVisao) {
     // Gerencia a classe ativa nos botões da interface
     document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
     
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
+    if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('active');
     }
     
     // Altera o posicionamento e comportamento da câmera física do Three.js
