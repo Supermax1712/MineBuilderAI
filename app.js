@@ -1,34 +1,29 @@
-// --- LÓGICA DO APLICATIVO E INTEGRAÇÃO COM IA ---
+// --- LÓGICA DO APP E ENGENHARIA DE PROMPT MINECRAFT ---
 
-// 1. CONFIGURAÇÃO DA API DA INTELIGÊNCIA ARTIFICIAL (GEMINI-2.5-FLASH)
 const GEMINI_API_KEY = "AIzaSyBf_QQbvHOPdDNbHfS-i06GzCm8YuR6sFE"; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// Instrução oculta que força a IA a agir estritamente como um gerador de matriz voxel
 const SYSTEM_INSTRUCTION = `
-Você é um arquiteto especialista em Minecraft e um gerador de matrizes 3D em formato JSON.
-Sua única tarefa é receber um pedido de estrutura e retornar um array JSON contendo as coordenadas de cada bloco para construir o que foi pedido.
+Você é um Arquiteto de Engenharia Voxel estrutural para Minecraft.
+Sua tarefa é converter pedidos textuais em layouts vazados tridimensionais legítimos.
 
-Use apenas estes blocos válidos do Minecraft:
-- "cobblestone" (Pedregulho)
-- "oak_planks" (Madeira de Carvalho)
-- "glass" (Vidro)
-- "iron_bars" (Barra de Ferro)
-- "stone_bricks" (Tijolo de Pedra)
+REGRAS RÍGIDAS DE CONSTRUÇÃO DE MINECRAFT:
+1. NUNCA faça caixas ou cubos maciços preenchidos. Casarões e cabanas DEVEM ter cômodos internos vazios (ocos).
+2. Paredes devem ser erguidas apenas nos perímetros externos. O espaço de dentro deve ser ar/vazio.
+3. Janelas de "glass" ou "iron_bars" devem ser inseridas substituindo blocos vazados das paredes na altura Y=1 ou Y=2, nunca no chão ou teto.
+4. Telhados não podem ser planos! Faça telhados em formato triangular ou de pirâmide (subindo em escada de "oak_planks" ou "stone_bricks"), onde cada camada acima é menor que a anterior.
 
-Regras cruciais:
-1. O chão/base começa em Y = 0.
-2. Não adicione textos, explicações, markdown ou blocos de código (\`\`\`json). Retorne APENAS o texto do JSON estruturado.
-3. Mantenha as estruturas compactas (máximo 15x15x15 de tamanho na V1 para ser leve).
+IDs de Blocos permitidos:
+- "cobblestone"
+- "oak_planks"
+- "glass"
+- "iron_bars"
+- "stone_bricks"
 
-Formato esperado do output:
-[
-  {"x": 0, "y": 0, "z": 0, "id": "cobblestone"},
-  {"x": 1, "y": 0, "z": 0, "id": "oak_planks"}
-]
+Output estrito: Apenas a string JSON crua do array, sem markdown, sem explicações.
+Exemplo: [{"x":0,"y":0,"z":0,"id":"cobblestone"}]
 `;
 
-// 2. FUNÇÃO QUE CHAMA A IA VIA PROMPT DO USUÁRIO
 async function enviarComandoIA() {
     const inputPrompt = document.getElementById('ai-prompt');
     const botaoGerar = document.getElementById('btn-gerar');
@@ -39,13 +34,11 @@ async function enviarComandoIA() {
         return;
     }
 
-    // Feedback visual de carregamento na interface
     botaoGerar.innerText = "Construindo...";
     botaoGerar.disabled = true;
     inputPrompt.disabled = true;
 
     try {
-        // Montando a requisição para a API do Gemini
         const response = await fetch(GEMINI_URL, {
             method: "POST",
             headers: {
@@ -53,65 +46,68 @@ async function enviarComandoIA() {
             },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{ text: promptTexto + "\n\nSiga as instruções do sistema rigidamente e retorne apenas o JSON." }]
+                    parts: [{ text: `Gere a planta exata para: ${promptTexto}. Certifique-se de fazer paredes ocas, portas livres e telhado em pirâmide clássico do Minecraft.` }]
                 }],
                 systemInstruction: {
                     parts: [{ text: SYSTEM_INSTRUCTION }]
                 },
                 generationConfig: {
-                    temperature: 0.2 // Baixa temperatura para a IA ser mais exata e menos aleatória
+                    temperature: 0.1, // Reduzido ao mínimo para impedir a IA de inventar formatos caóticos
+                    responseMimeType: "application/json" // Força o Gemini a responder JSON estruturado nativamente
                 }
             })
         });
 
+        if (!response.ok) throw new Error(`HTTP erro status: ${response.status}`);
+
         const data = await response.json();
-        
-        // Pega o texto bruto retornado pela IA
         let jsonTexto = data.candidates[0].content.parts[0].text.trim();
         
-        // Limpeza de segurança caso a IA quebre a regra e envie formatação markdown
+        // Sanatização completa
         jsonTexto = jsonTexto.replace(/```json/g, "").replace(/```/g, "").trim();
 
-        // Converte o texto da IA em uma lista Javascript real
         const matrizBlocos = JSON.parse(jsonTexto);
 
-        // Processa os dados gerados no motor 3D e interface
-        limparCena(); 
-        renderizarEstrutura(matrizBlocos);
-        atualizarPainelMateriais(matrizBlocos);
+        if (typeof limparCena === "function") {
+            limparCena(); 
+            renderizarEstrutura(matrizBlocos);
+            atualizarPainelMateriais(matrizBlocos);
+        } else {
+            console.error("Função limparCena não encontrada.");
+        }
 
     } catch (erro) {
-        console.error("Erro na comunicação com a IA:", erro);
-        alert("Houve um erro ao processar o comando da IA. Verifique o console ou a conexão.");
+        console.error("Erro completo processado:", erro);
+        alert("Erro na conexão ou limite de uso da API Key. Verifique os logs.");
     } finally {
-        // Restaura os botões da interface
         botaoGerar.innerText = "Gerar Planta";
         botaoGerar.disabled = false;
         inputPrompt.disabled = false;
     }
 }
 
-// 3. RENDERIZAÇÃO DOS BLOCOS ADAPTADA PARA TEXTURAS ORIGINAIS
 function renderizarEstrutura(listaDeBlocos) {
+    if (typeof adicionarBloco !== "function") return;
     listaDeBlocos.forEach(bloco => {
-        // Envia o ID técnico recebido da IA diretamente para o engine.js
-        // Lá ele escolherá a textura original correta e o formato tridimensional correto
         adicionarBloco(bloco.x, bloco.y, bloco.z, bloco.id);
     });
 }
 
-// 4. CALCULAR E ATUALIZAR A LISTA DE MATERIAIS (SHOPPING LIST)
+function atualizarPainelMaterials(listaDeBlocos) {
+    // Mantido por retrocompatibilidade se invocado por engano
+    atualizarPainelMateriais(listaDeBlocos);
+}
+
 function atualizarPainelMateriais(listaDeBlocos) {
     const painelMateriais = document.getElementById('materials-list');
-    painelMateriais.innerHTML = ""; // Limpa a lista antiga da tela
+    if (!painelMateriais) return;
+    painelMateriais.innerHTML = ""; 
 
-    // Objeto para contar a quantidade de cada tipo de bloco
     const contagem = {};
     listaDeBlocos.forEach(b => {
         contagem[b.id] = (contagem[b.id] || 0) + 1;
     });
 
-    // Tradução limpa dos IDs para nomes legíveis na tela
     const nomesAmigaveis = {
         "cobblestone": "Pedregulho",
         "oak_planks": "Tábua de Carvalho",
@@ -120,7 +116,6 @@ function atualizarPainelMateriais(listaDeBlocos) {
         "stone_bricks": "Tijolos de Pedra"
     };
 
-    // Gera o HTML de cada material calculado
     for (const [id, total] of Object.entries(contagem)) {
         const packs = Math.floor(total / 64);
         const restos = total % 64;
@@ -139,30 +134,27 @@ function atualizarPainelMateriais(listaDeBlocos) {
     }
 }
 
-// 5. FUNÇÕES DE SUPORTE DA INTERFACE VINCULADAS AO ENGINE
 function toggleMenuConfig() {
     const menu = document.getElementById('config-menu');
-    menu.classList.toggle('hidden');
+    if (menu) menu.classList.toggle('hidden');
 }
 
 function configAlterada(tipo, valor) {
-    // Altera dinamicamente as propriedades do motor gráfico (sombras, grades, etc)
-    aplicarConfiguracaoGrafica(tipo, valor);
+    if (typeof aplicarConfiguracaoGrafica === "function") {
+        aplicarConfiguracaoGrafica(tipo, valor);
+    }
 }
 
 function mudarVisao(tipoVisao) {
-    // Gerencia a classe ativa nos botões da interface
     document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
-    
     if (window.event && window.event.currentTarget) {
         window.event.currentTarget.classList.add('active');
     }
-    
-    // Altera o posicionamento e comportamento da câmera física do Three.js
-    aplicarVisaoCamera(tipoVisao);
+    if (typeof aplicarVisaoCamera === "function") {
+        aplicarVisaoCamera(tipoVisao);
+    }
 }
 
 function atualizarFiltroCamada(valor) {
-    console.log(`Filtrando para mostrar apenas blocos abaixo da altura Y = ${valor}`);
-    // Futura expansão: ocultar blocos da cena com Y maior que o valor do slider
+    console.log(`Filtragem Y ativa: ${valor}`);
 }
