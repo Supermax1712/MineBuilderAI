@@ -3,19 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MineBuilder AI - V1 Modular</title>
+    <title>MineBuilder AI - Painel de Controle</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div class="hud-card">
-            <h1>MineBuilder V1</h1>
-            <p>Layout estruturado e modular ativo.</p>
-        </div>
-    </div>
-
     <div id="canvas-container"></div>
+
+    <div id="ui-container">
+        
+        <header class="ui-panel" id="ai-panel">
+            <div class="ai-input-wrapper">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: #8cff00;"></i>
+                <input type="text" id="ai-prompt" placeholder="Ex: Crie uma torre medieval de 15 blocos com escadas...">
+                <button id="btn-gerar" onclick="enviarComandoIA()">Gerar Planta</button>
+            </div>
+        </header>
+
+        <aside class="ui-panel" id="view-panel">
+            <h2>Visualização</h2>
+            <div class="btn-group">
+                <button class="btn-view active" onclick="mudarVisao('3d')"><i class="fa-solid fa-cube"></i> Órbita 3D</button>
+                <div class="grid-views">
+                    <button class="btn-view" onclick="mudarVisao('topo')">Cima</button>
+                    <button class="btn-view" onclick="mudarVisao('baixo')">Baixo</button>
+                    <button class="btn-view" onclick="mudarVisao('frente')">Frente</button>
+                    <button class="btn-view" onclick="mudarVisao('tras')">Trás</button>
+                    <button class="btn-view" onclick="mudarVisao('esquerda')">Esq.</button>
+                    <button class="btn-view" onclick="mudarVisao('direita')">Dir.</button>
+                </div>
+            </div>
+            
+            <div class="layer-control">
+                <h3>Filtro por Altura (Y)</h3>
+                <div class="range-wrapper">
+                    <span id="layer-val-min">0</span>
+                    <input type="range" id="layer-slider" min="0" max="64" value="64" oninput="atualizarFiltroCamada(this.value)">
+                    <span id="layer-val-max">64</span>
+                </div>
+            </div>
+        </aside>
+
+        <aside class="ui-panel" id="materials-panel">
+            <h2>Materiais Necessários</h2>
+            <div id="materials-list">
+                <div class="material-item">
+                    <div class="mat-info">
+                        <span class="mat-name">Pedregulho (Cobblestone)</span>
+                        <span class="mat-count">Total: <b>128</b></span>
+                    </div>
+                    <span class="mat-packs">2 Packs</span>
+                </div>
+                <div class="material-item">
+                    <div class="mat-info">
+                        <span class="mat-name">Tábua de Carvalho</span>
+                        <span class="mat-count">Total: <b>64</b></span>
+                    </div>
+                    <span class="mat-packs">1 Pack</span>
+                </div>
+            </div>
+        </aside>
+
+        <footer class="ui-panel" id="settings-panel">
+            <div class="settings-toggle" onclick="toggleMenuConfig()">
+                <i class="fa-solid fa-gear"></i> Configurações do App
+            </div>
+            
+            <div id="config-menu" class="hidden">
+                <div class="config-section">
+                    <h3>Gráficos & Performance</h3>
+                    <label class="config-option">
+                        <span>Sombras Realistas (Pesa mais)</span>
+                        <input type="checkbox" id="cfg-shadows" checked onchange="configAlterada('sombras', this.checked)">
+                    </label>
+                    <label class="config-option">
+                        <span>Renderizar Grade do Chão</span>
+                        <input type="checkbox" id="cfg-grid" checked onchange="configAlterada('grade', this.checked)">
+                    </label>
+                </div>
+                <div class="config-section">
+                    <h3>Preferências</h3>
+                    <label class="config-option">
+                        <span>Mostrar IDs técnicos dos blocos</span>
+                        <input type="checkbox" id="cfg-tech-ids" onchange="configAlterada('ids', this.checked)">
+                    </label>
+                </div>
+            </div>
+        </footer>
+
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -24,4 +101,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
