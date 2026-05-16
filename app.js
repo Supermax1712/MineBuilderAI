@@ -1,8 +1,6 @@
 // --- LÓGICA DO APLICATIVO E INTEGRAÇÃO COM IA ---
 
-// 1. CONFIGURAÇÃO DA API DA INTELIGÊNCIA ARTIFICIAL
-// IMPORTANTE: Em um ambiente real de produção, escondemos essa chave. 
-// Para a sua V1 local, você colará sua chave da Google AI Studio aqui.
+// 1. CONFIGURAÇÃO DA API DA INTELIGÊNCIA ARTIFICIAL (GEMINI-2.5-FLASH)
 const GEMINI_API_KEY = "AIzaSyBf_QQbvHOPdDNbHfS-i06GzCm8YuR6sFE"; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -84,7 +82,7 @@ async function enviarComandoIA() {
 
     } catch (erro) {
         console.error("Erro na comunicação com a IA:", erro);
-        alert("Houve um erro ao processar o comando da IA. Verifique o console ou sua API Key.");
+        alert("Houve um erro ao processar o comando da IA. Verifique o console ou a conexão.");
     } finally {
         // Restaura os botões da interface
         botaoGerar.innerText = "Gerar Planta";
@@ -148,25 +146,30 @@ function atualizarPainelMateriais(listaDeBlocos) {
     }
 }
 
-// 5. FUNÇÕES DE SUPORTE DA INTERFACE (Ainda sem comportamento do 3D)
+// 5. FUNÇÕES DE SUPORTE DA INTERFACE VINCULADAS AO ENGINE
 function toggleMenuConfig() {
     const menu = document.getElementById('config-menu');
     menu.classList.toggle('hidden');
 }
 
 function configAlterada(tipo, valor) {
-    console.log(`Configuração [${tipo}] alterada para: ${valor}`);
-    // Vincularemos com as funções do engine.js na próxima etapa
+    // Altera dinamicamente as propriedades do motor gráfico (sombras, grades, etc)
+    aplicarConfiguracaoGrafica(tipo, valor);
 }
 
 function mudarVisao(tipoVisao) {
-    // Remove classe ativa de todos os botões e adiciona no clicado
+    // Gerencia a classe ativa nos botões da interface
     document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    console.log(`Mudando câmera para visão: ${tipoVisao}`);
-    // Vincularemos com as posições de câmera do engine.js na próxima etapa
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+    
+    // Altera o posicionamento e comportamento da câmera física do Three.js
+    aplicarVisaoCamera(tipoVisao);
 }
 
 function atualizarFiltroCamada(valor) {
     console.log(`Filtrando para mostrar apenas blocos abaixo da altura Y = ${valor}`);
+    // Futura expansão: ocultar blocos da cena com Y maior que o valor do slider
 }
