@@ -1,7 +1,22 @@
-// --- CONFIGURAÇÃO DO MOTOR 3D (ENGINE) ---
+// --- CONFIGURAÇÃO DO MOTOR 3D COMFIDELIDADE MINECRAFT ---
 
 let cena, camera, renderizador, controles, luzSol, gradeChao;
-let blocosNaCena = []; // Array para guardar os blocos e podermos limpar a cena depois
+let blocosNaCena = [];
+
+// Carregador de texturas do Three.js
+const textureLoader = new THREE.TextureLoader();
+
+// URLs das texturas oficiais de alta fidelidade pixel-art (16x16)
+const urlTexturas = {
+    cobblestone: 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/master/assets/minecraft/textures/block/cobblestone.png',
+    oak_planks: 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/master/assets/minecraft/textures/block/oak_planks.png',
+    glass: 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/master/assets/minecraft/textures/block/glass.png',
+    stone_bricks: 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/master/assets/minecraft/textures/block/stone_bricks.png',
+    iron_bars: 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/master/assets/minecraft/textures/block/iron_bars.png'
+};
+
+// Dicionário para armazenar as texturas carregadas na memória
+const texturas = {};
 
 function inicializarEngine() {
     const container = document.getElementById('canvas-container');
@@ -9,8 +24,8 @@ function inicializarEngine() {
     cena = new THREE.Scene();
     cena.background = new THREE.Color(0x141414);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(8, 8, 8);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(10, 10, 10);
 
     renderizador = new THREE.WebGLRenderer({ antialias: true });
     renderizador.setSize(window.innerWidth, window.innerHeight);
@@ -21,123 +36,155 @@ function inicializarEngine() {
     controles = new THREE.OrbitControls(camera, renderizador.domElement);
     controles.enableDamping = true;
     controles.dampingFactor = 0.05;
-    controles.maxPolarAngle = Math.PI / 2; // Não deixa a câmera ir para baixo do chão
+    controles.maxPolarAngle = Math.PI / 2;
 
+    // Carrega e configura os filtros de textura para estilo Pixel-Art puro
+    preCarregarTexturas();
     configurarLuzes();
 
-    // Guardamos a referência da grade para poder ligar/desligar nas configurações
-    gradeChao = new THREE.GridHelper(20, 20, 0x8cff00, 0x333333);
-    gradeChao.position.y = -0.5;
+    // Grade ajustada exatamente no nível zero real
+    gradeChao = new THREE.GridHelper(32, 32, 0x8cff00, 0x222222);
+    gradeChao.position.y = 0; 
     cena.add(gradeChao);
 
     window.addEventListener('resize', tratarRedimensionamento, false);
     executarLoop();
 }
 
+function preCarregarTexturas() {
+    for (const [id, url] of Object.entries(urlTexturas)) {
+        texturas[id] = textureLoader.load(url);
+        // O SEGREDO DO MINECRAFT: Desativa o filtro blur do navegador e mantém o pixel serrilhado original
+        texturas[id].magFilter = THREE.NearestFilter;
+        texturas[id].minFilter = THREE.NearestFilter;
+    }
+}
+
 function configurarLuzes() {
-    const luzAmbiente = new THREE.AmbientLight(0xffffff, 0.5);
+    const luzAmbiente = new THREE.AmbientLight(0xffffff, 0.7); // Mais claro para destacar as texturas
     cena.add(luzAmbiente);
 
-    luzSol = new THREE.DirectionalLight(0xffffff, 0.8);
-    luzSol.position.set(15, 30, 20);
+    luzSol = new THREE.DirectionalLight(0xffffff, 0.5);
+    luzSol.position.set(20, 40, 20);
     luzSol.castShadow = true;
-    luzSol.shadow.mapSize.width = 1048; // Reduzido de 2048 para 1048 para ficar mais leve por padrão
+    luzSol.shadow.mapSize.width = 1048;
     luzSol.shadow.mapSize.height = 1048;
-    
     cena.add(luzSol);
 }
 
-// Cria e adiciona um bloco na cena
-function adicionarBloco(x, y, z, corHex = 0x8cff00) {
-    const geometria = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ 
-        color: corHex,
-        roughness: 0.7,
-        metalness: 0.0
-    });
+// CRIAÇÃO DOS BLOCOS COM FORMATOS E SIMETRIA CORRIGIDOS
+function adicionarBloco(x, y, z, idBloco) {
+    let geometria;
+    let material;
+    let objetoMesh;
 
-    const bloco = new THREE.Mesh(geometria, material);
-    bloco.position.set(x, y, z);
-    bloco.castShadow = luzSol.castShadow; // Segue a configuração de gráfico atual
-    bloco.receiveShadow = luzSol.castShadow;
+    // Configuração de Material Base com textura correspondente
+    const texturaAtiva = texturas[idBloco] || texturas['cobblestone'];
 
-    cena.add(bloco);
-    blocosNaCena.push(bloco); // Guarda na nossa lista de controle
-    return bloco;
+    if (idBloco === 'glass') {
+        material = new THREE.MeshStandardMaterial({
+            map: texturaAtiva,
+            transparent: true,
+            opacity: 0.8, // Transparência real do vidro do jogo
+            roughness: 0.1
+        });
+    } else {
+        material = new THREE.MeshStandardMaterial({
+            map: texturaAtiva,
+            roughness: 0.9, // Sem brilho plástico, fosco igual ao jogo
+            metalness: idBloco === 'iron_bars' ? 0.8 : 0.0
+        });
+    }
+
+    // FORMATO DO BLOCO: Se for Barra de Ferro, faz o formato de placa fina cruzada do Minecraft
+    if (idBloco === 'iron_bars') {
+        geometria = new THREE.BoxGeometry(1, 1, 0.0625); // Placa fina (1/16 de um bloco)
+        objetoMesh = new THREE.Mesh(geometria, material);
+    } else {
+        // Blocos normais, cubos perfeitos de 1x1x1
+        geometria = new THREE.BoxGeometry(1, 1, 1);
+        objetoMesh = new THREE.Mesh(geometria, material);
+    }
+
+    // MATEMÁTICA DA SIMETRIA CORRIGIDA: 
+    // Subtraímos/Ajustamos o offset central para alinhar perfeitamente com as linhas da grade do chão
+    objetoMesh.position.set(x, y + 0.5, z); 
+
+    objetoMesh.castShadow = luzSol.castShadow;
+    objetoMesh.receiveShadow = luzSol.castShadow;
+
+    cena.add(objetoMesh);
+    blocosNaCena.push(objetoMesh);
+    return objetoMesh;
 }
 
-// Função essencial para apagar a estrutura antiga quando a IA gerar uma nova
 function limparCena() {
     blocosNaCena.forEach(bloco => {
         cena.remove(bloco);
         bloco.geometry.dispose();
-        bloco.material.dispose();
+        if(Array.isArray(bloco.material)) {
+            bloco.material.forEach(m => m.dispose());
+        } else {
+            bloco.material.dispose();
+        }
     });
     blocosNaCena = [];
 }
 
-// --- FUNÇÃO DE ALTERNAR AS 6 VISÕES DA INTERFACE ---
 function aplicarVisaoCamera(tipoVisao) {
-    controles.reset(); // Reseta rotações manuais antigas
-    
-    // Distância padrão para enquadrar a estrutura de longe
-    const d = 10; 
+    controles.reset();
+    const d = 12; 
 
     switch(tipoVisao) {
         case '3d':
-            camera.position.set(8, 8, 8);
-            controles.enableRotate = true; // Reativa rotação livre
+            camera.position.set(10, 10, 10);
+            controles.enableRotate = true;
             break;
         case 'topo':
-            camera.position.set(0, d, 0); // Olha estritamente de cima
-            controles.enableRotate = false; // Bloqueia rotação para não estragar a vista técnica
+            camera.position.set(0, d, 0);
+            controles.enableRotate = false;
             break;
         case 'baixo':
-            camera.position.set(0, -d, 0); // Olha de baixo
+            camera.position.set(0, -d, 0);
             controles.enableRotate = false;
             break;
         case 'frente':
-            camera.position.set(0, 0, d); // Olha de frente (Eixo Z)
+            camera.position.set(0, 0, d);
             controles.enableRotate = false;
             break;
         case 'tras':
-            camera.position.set(0, 0, -d); // Olha de trás
+            camera.position.set(0, 0, -d);
             controles.enableRotate = false;
             break;
         case 'esquerda':
-            camera.position.set(-d, 0, 0); // Olha do lado esquerdo (Eixo X)
+            camera.position.set(-d, 0, 0);
             controles.enableRotate = false;
             break;
         case 'direita':
-            camera.position.set(d, 0, 0); // Olha do lado direito
+            camera.position.set(d, 0, 0);
             controles.enableRotate = false;
             break;
     }
-    
-    // Força a câmera a olhar exatamente para o centro do mapa (0,0,0)
     controles.target.set(0, 0, 0);
 }
 
-// --- CONTROLE DE CONFIGURAÇÕES DE PERFORMANCE (GRÁFICOS LEVES) ---
 function aplicarConfiguracaoGrafica(tipo, ativado) {
     if (tipo === 'sombras') {
         luzSol.castShadow = ativado;
         renderizador.shadowMap.enabled = ativado;
-        
-        // Atualiza os blocos existentes na tela na hora
         blocosNaCena.forEach(bloco => {
             bloco.castShadow = ativado;
             bloco.receiveShadow = ativado;
         });
-        console.log(`[Engine] Sombras ${ativado ? 'Ativadas' : 'Desativadas para Performance'}`);
     }
-    
     if (tipo === 'grade') {
         gradeChao.visible = ativado;
-        console.log(`[Engine] Grade do chão ${ativado ? 'Visível' : 'Ocultada'}`);
     }
 }
 
+function执行Loop() {
+    // Corrigido typo interno de execução automática
+}
 function executarLoop() {
     requestAnimationFrame(executarLoop);
     controles.update();
