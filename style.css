@@ -1,4 +1,6 @@
-/* RESET DE INTERFACE */
+/* ==========================================================================
+   RESET E CONFIGURAÇÕES BASE
+   ========================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -14,6 +16,7 @@ body, html {
     color: #e0e0e0;
 }
 
+/* Container onde o Three.js injeta a janela do motor 3D */
 #canvas-container {
     width: 100%;
     height: 100%;
@@ -23,7 +26,9 @@ body, html {
     z-index: 1;
 }
 
-/* CONTAINER DA INTERFACE POR CIMA DO 3D */
+/* ==========================================================================
+   GRID DA INTERFACE DO UTILIZADOR (UI) POR CIMA DO 3D
+   ========================================================================== */
 #ui-container {
     position: absolute;
     top: 0;
@@ -31,7 +36,7 @@ body, html {
     width: 100%;
     height: 100%;
     z-index: 10;
-    pointer-events: none; /* Mouse ignora fundo transparente */
+    pointer-events: none; /* Deixa o rato passar para interagir com o 3D ao fundo */
     display: grid;
     grid-template-columns: 280px 1fr 320px;
     grid-template-rows: auto 1fr auto;
@@ -43,18 +48,18 @@ body, html {
     gap: 20px;
 }
 
-/* ESTILO BASE DOS PAINÉIS */
+/* Estilo padrão para todos os painéis escuros da interface */
 .ui-panel {
-    background: rgba(24, 24, 24, 0.92);
+    background: rgba(24, 24, 24, 0.94);
     border: 1px solid #2d2d2d;
     border-radius: 6px;
     padding: 15px;
-    pointer-events: auto; /* Reativa cliques nos menus */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    pointer-events: auto; /* Bloqueia o clique, impedindo que passe para o 3D */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
 .ui-panel h2 {
-    font-size: 16px;
+    font-size: 14px;
     text-transform: uppercase;
     color: #8cff00;
     letter-spacing: 0.5px;
@@ -63,7 +68,9 @@ body, html {
     padding-bottom: 6px;
 }
 
-/* BARRA SUPERIOR (IA) */
+/* ==========================================================================
+   BARRA SUPERIOR: INPUT DA INTELIGÊNCIA ARTIFICIAL
+   ========================================================================== */
 #ai-panel {
     grid-area: header;
     width: 100%;
@@ -108,7 +115,15 @@ body, html {
     background: #a3ff33;
 }
 
-/* PAINEL ESQUERDO (VISÕES E CÂMERA) */
+.ai-input-wrapper button:disabled {
+    background: #555;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   PAINEL ESQUERDO: CONTROLE DE CÂMERAS E VISÕES FIXAS
+   ========================================================================== */
 #view-panel {
     grid-area: left;
     display: flex;
@@ -127,11 +142,12 @@ body, html {
     background: #1e1e1e;
     color: #aaa;
     border: 1px solid #333;
-    padding: 8px;
+    padding: 9px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
     text-align: left;
+    transition: background 0.1s;
 }
 
 .btn-view:hover {
@@ -140,7 +156,7 @@ body, html {
 }
 
 .btn-view.active {
-    background: #333;
+    background: #252525;
     color: #8cff00;
     border-color: #8cff00;
 }
@@ -154,7 +170,8 @@ body, html {
 .layer-control h3 {
     font-size: 12px;
     color: #888;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
 }
 
 .range-wrapper {
@@ -167,13 +184,16 @@ body, html {
 .range-wrapper input {
     flex-grow: 1;
     accent-color: #8cff00;
+    cursor: pointer;
 }
 
-/* PAINEL DIREITO (MATERIAIS) */
+/* ==========================================================================
+   PAINEL DIREITO: LISTA DE MATERIAIS DINÂMICA
+   ========================================================================== */
 #materials-panel {
     grid-area: right;
     align-self: start;
-    max-height: 80vh;
+    max-height: 75vh;
     overflow-y: auto;
 }
 
@@ -211,14 +231,18 @@ body, html {
     border-radius: 3px;
     font-size: 11px;
     color: #8cff00;
+    font-family: monospace;
 }
 
-/* RODAPÉ E CONFIGURAÇÕES */
+/* ==========================================================================
+   RODAPÉ CORRIGIDO: ABA DE CONFIGURAÇÕES REBAIXADA E RETRAÍVEL
+   ========================================================================== */
 #settings-panel {
     grid-area: footer;
     justify-self: start;
     position: relative;
-    padding: 10px 15px;
+    padding: 8px 14px;
+    margin-top: auto; /* Força o botão a fixar-se estritamente na base */
 }
 
 .settings-toggle {
@@ -228,17 +252,19 @@ body, html {
     align-items: center;
     gap: 8px;
     color: #aaa;
+    user-select: none;
 }
 
 .settings-toggle:hover {
     color: #fff;
 }
 
+/* Pop-up que abre verticalmente colado ao botão, sem obstruir o centro da tela */
 #config-menu {
     position: absolute;
-    bottom: 45px;
+    bottom: 42px; 
     left: 0;
-    background: #181818;
+    background: #161616;
     border: 1px solid #333;
     border-radius: 6px;
     padding: 15px;
@@ -246,7 +272,7 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.7);
 }
 
 .hidden {
@@ -254,10 +280,11 @@ body, html {
 }
 
 .config-section h3 {
-    font-size: 12px;
+    font-size: 11px;
     color: #8cff00;
     margin-bottom: 8px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .config-option {
@@ -266,10 +293,18 @@ body, html {
     align-items: center;
     font-size: 13px;
     color: #ccc;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     cursor: pointer;
+    user-select: none;
+}
+
+.config-option:hover {
+    color: #fff;
 }
 
 .config-option input {
     accent-color: #8cff00;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
 }
