@@ -1,1 +1,58 @@
+/* Reseta as margens padrões do navegador */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #141414;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container onde o Three.js vai injetar o mundo 3D */
+#canvas-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Camada transparente que fica por cima do 3D para os botões e textos */
+#ui-layer {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    pointer-events: none; /* Permite clicar no 3D através do espaço vazio */
+}
+
+/* Cartão da interface (HUD) */
+.hud-card {
+    background: rgba(20, 20, 20, 0.85);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    color: #fff;
+    pointer-events: auto; /* Bloqueia o clique passando para o 3D quando o mouse estiver sobre o cartão */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+h1 {
+    font-size: 20px;
+    color: #8cff00;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+p {
+    font-size: 14px;
+    color: #aaa;
+}
 
