@@ -1,4 +1,4 @@
-/* Reseta as margens padrões do navegador */
+/* RESET DE INTERFACE */
 * {
     margin: 0;
     padding: 0;
@@ -9,11 +9,11 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #141414;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #101010;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #e0e0e0;
 }
 
-/* Container onde o Three.js vai injetar o mundo 3D */
 #canvas-container {
     width: 100%;
     height: 100%;
@@ -23,36 +23,253 @@ body, html {
     z-index: 1;
 }
 
-/* Camada transparente que fica por cima do 3D para os botões e textos */
-#ui-layer {
+/* CONTAINER DA INTERFACE POR CIMA DO 3D */
+#ui-container {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 10;
-    pointer-events: none; /* Permite clicar no 3D através do espaço vazio */
-}
-
-/* Cartão da interface (HUD) */
-.hud-card {
-    background: rgba(20, 20, 20, 0.85);
+    pointer-events: none; /* Mouse ignora fundo transparente */
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+        "header header header"
+        "left   .      right"
+        "footer footer footer";
     padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    color: #fff;
-    pointer-events: auto; /* Bloqueia o clique passando para o 3D quando o mouse estiver sobre o cartão */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    gap: 20px;
 }
 
-h1 {
-    font-size: 20px;
-    color: #8cff00;
-    margin-bottom: 5px;
+/* ESTILO BASE DOS PAINÉIS */
+.ui-panel {
+    background: rgba(24, 24, 24, 0.92);
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    padding: 15px;
+    pointer-events: auto; /* Reativa cliques nos menus */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.ui-panel h2 {
+    font-size: 16px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    color: #8cff00;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #2d2d2d;
+    padding-bottom: 6px;
 }
 
-p {
+/* BARRA SUPERIOR (IA) */
+#ai-panel {
+    grid-area: header;
+    width: 100%;
+    max-width: 800px;
+    justify-self: center;
+}
+
+.ai-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ai-input-wrapper input {
+    flex-grow: 1;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    padding: 10px 14px;
+    color: #fff;
+    border-radius: 4px;
     font-size: 14px;
+    outline: none;
+}
+
+.ai-input-wrapper input:focus {
+    border-color: #8cff00;
+}
+
+.ai-input-wrapper button {
+    background: #8cff00;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.ai-input-wrapper button:hover {
+    background: #a3ff33;
+}
+
+/* PAINEL ESQUERDO (VISÕES E CÂMERA) */
+#view-panel {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-self: start;
+}
+
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-view {
+    background: #1e1e1e;
+    color: #aaa;
+    border: 1px solid #333;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+}
+
+.btn-view:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+.btn-view.active {
+    background: #333;
+    color: #8cff00;
+    border-color: #8cff00;
+}
+
+.grid-views {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.layer-control h3 {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.range-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.range-wrapper input {
+    flex-grow: 1;
+    accent-color: #8cff00;
+}
+
+/* PAINEL DIREITO (MATERIAIS) */
+#materials-panel {
+    grid-area: right;
+    align-self: start;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.material-item {
+    background: #1a1a1a;
+    border: 1px solid #2d2d2d;
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mat-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.mat-count {
+    font-size: 11px;
+    color: #888;
+}
+
+.mat-packs {
+    background: #2a2a2a;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #8cff00;
+}
+
+/* RODAPÉ E CONFIGURAÇÕES */
+#settings-panel {
+    grid-area: footer;
+    justify-self: start;
+    position: relative;
+    padding: 10px 15px;
+}
+
+.settings-toggle {
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     color: #aaa;
 }
 
+.settings-toggle:hover {
+    color: #fff;
+}
+
+#config-menu {
+    position: absolute;
+    bottom: 45px;
+    left: 0;
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.config-section h3 {
+    font-size: 12px;
+    color: #8cff00;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.config-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #ccc;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.config-option input {
+    accent-color: #8cff00;
+}
